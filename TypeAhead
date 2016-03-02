@@ -1,0 +1,726 @@
+package TextPro;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.awt.datatransfer.*;
+import java.awt.event.*;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.undo.*;
+import javax.swing.colorchooser.ColorChooserComponentFactory;
+import sun.beans.editors.StringEditor;
+import javax.swing.plaf.MenuBarUI;
+import javax.swing.text.*;
+
+  
+//This class extends the JFrame class,contains all the components that will be 
+//displayed and is adding them to the content pane in the constructor.
+public class TypeAhead extends JFrame {
+    //the menu bar of the program
+    private JMenuBar mb;
+    //private JScrollpane scrollpane;
+    //menus that are in the menu bar
+    private JMenu file;
+    private JMenu edit;
+    private JMenu format;
+    private JMenu predict;
+    private JMenu help;
+    
+    //items of menu File
+    //creates a new document
+    private JMenuItem _new;
+    //opens a document
+    private JMenuItem open;
+    //saves a document
+    private JMenuItem save;
+    //items of menu Edit
+    //cuts to the clipboard the selected text
+    private JMenuItem cut;
+    //copies to the clipboard the selected text
+    private JMenuItem copy;
+    //pastes to the clipboard the selected text
+    private JMenuItem paste;
+    //predicts the text you type 
+    private JMenuItem predictivetext;
+    
+    private JMenuItem getstarted;
+    private JMenuItem asAdmin;
+    
+
+    //items on menu Format
+    //changes the font of the text
+    public JMenuItem textFont;
+    //changes the color of the font
+    private JMenuItem fontColor;
+    //changes the backround color
+    private JMenuItem bgColor;
+    //the text area
+    private JTextPane text;
+    //a component used for scrolling.
+    private  JScrollPane jsp;
+    
+    //the text field that displays the file name and path.
+    JTextField ta;
+    Clipboard board=getToolkit().getSystemClipboard();
+    public Font currentFont=new Font("Times New Roman",Font.PLAIN,12);
+    //used for Save operation.If the user has saved before exits the program
+    //then no pop up confirmation box appears else a confirmation box appears 
+    //reminding to save the  file.
+    boolean isSaved=false;
+    //The lists containded in the Format menu
+    //Each list has a default list model with which items are added to the list.
+     DefaultListModel lItems=new DefaultListModel();//holds fonts
+     DefaultListModel SItems=new DefaultListModel();//holds sizes
+     DefaultListModel TItems=new DefaultListModel();//holds styles
+     JList styleList = new JList(TItems);//styles list       
+     JList fontsList = new JList(lItems);//fonts list
+     JList sizeList=new JList(SItems);//sizes list
+     UIManager ui=new UIManager();
+     
+    //initializing componets at point of construction of the object
+    TypeAhead() {
+        //setting the user interface to windowed style.
+        try {
+            
+            ui.setLookAndFeel(UIManager.
+            getSystemLookAndFeelClassName());
+        } 
+        catch(Exception e) {
+            e.printStackTrace();
+        }
+         //initializing the components in constructor so  that the above look and feel is applied to 
+        //them.Look and feel must be set before the components or else it will not work.
+        mb=new JMenuBar();
+        //menus that are in the menu bar
+        file=new JMenu("File");
+        edit=new JMenu("Edit");
+        format=new JMenu("Format");
+        predict=new JMenu("Predict");
+        help= new JMenu("Help");
+        
+        //items of menu File
+        //creates a new document
+        _new=new JMenuItem("New");
+        //opens a document
+        open=new JMenuItem("Open");
+        //saves a document
+        save=new JMenuItem("Save");
+        //items of menu Edit
+        //cuts to the clipboard the selected text
+        cut=new JMenuItem("Cut        Ctrl+X");
+        //copies to the clipboard the selected text
+        copy=new JMenuItem("Copy     Ctrl+C");
+        //pastes to the clipboard the selected text
+        paste=new JMenuItem("Paste    Ctrl+V");
+        
+        
+        //items on menu Format
+        //changes the font of the text
+        textFont=new JMenuItem("Font");
+        //changes the color of the font
+        fontColor=new JMenuItem("Font Color");
+        //changes the backround color
+        bgColor=new JMenuItem("Background Color");
+        
+        predictivetext=new JMenuItem("predictive text");
+        
+        getstarted =new JMenuItem("Get Started");
+        asAdmin = new JMenuItem("Admin Login");
+        
+
+        //the text area
+        text=new JTextPane();
+  
+        //a component used for scrolling.
+        jsp=new JScrollPane();
+        //scrollpane=new scrollpane();
+        //the text field that displays the file name and path.
+        ta=new JTextField(35);
+
+        //title of the file(displayed on the window frame)
+        //Untitled is the default name of the file
+        setTitle("Untitled");
+        //try to make methods that will initialize components and call these methods 
+        //displays the string "Filepath"
+        JTextField filepath=new JTextField(5);
+        //the text field will not be editable it will only display the file name and path.
+        filepath.setEditable(false);
+        //this font is used in the text field filepath.
+        Font font=new Font("Times New Roman",Font.BOLD,14);
+        filepath.setFont(font);
+        filepath.setText("Filepath:");
+        ta.setEditable(false);
+        //the filepath text fields are placed to this panel.
+        JPanel p=new JPanel();
+        //registering the listener for window events handling.
+        addWindowListener(new WindowL());
+        //registering listeners with components.
+        _new.addActionListener(new FileNewL());
+        open.addActionListener(new FileOpenL());
+        save.addActionListener(new FileSaveL());
+
+        cut.addActionListener(new EditCutL());
+        copy.addActionListener(new EditCopyL());
+        paste.addActionListener(new EditPasteL());
+        textFont.addActionListener(new FormatFontL());
+        predictivetext.addActionListener(new PredictText());
+        getstarted.addActionListener(new gethelp());
+        asAdmin.addActionListener(new admin());
+        
+        //contains the components to be displayed
+        Container cp = getContentPane();
+        //adding buttons to menu File
+        file.add(_new);
+        file.add(open);
+        file.add(save);
+        //adding buttons to menu Edit
+        edit.add(cut);
+        edit.add(copy);
+        edit.add(paste);
+       // edit.add(undoButton);
+       // edit.add(redoButton);
+        //adding buttons to menu Format
+        format.add(textFont);
+        format.add(fontColor);
+        format.add(bgColor);
+        
+        predict.add(predictivetext);
+        
+        help.add(getstarted);
+        help.add(asAdmin);
+        
+
+        //setting the layout of the panel and placing the components 
+        p.setLayout(new BorderLayout());
+        p.add(filepath,BorderLayout.WEST);
+        p.add(ta,BorderLayout.CENTER);
+        //placing the menus  to the menu bar
+        mb.add(file);
+        mb.add(edit);
+        mb.add(format);
+        mb.add(predict);
+        mb.add(help);
+        //placing the menu bar to the frame
+        setJMenuBar(mb);
+        //the content that the editor will be able to read/write
+       ////////////////  USED IN OPEN THE FILE IN TEXT PANE //////////////////////
+         text.setContentType("txt");
+        ///////////////////////////END
+        //making the Editor Pane viewable
+        jsp.getViewport().add(text);
+        //adding components to the container
+        cp.add(jsp, BorderLayout.CENTER);
+        cp.add(p,BorderLayout.NORTH);
+        //setting the fonts TRY TO MAKE METHOD
+        String [] Allfonts={"Arial","Times New Roman","Century Gothic","Bookman Old Style",
+        "Book Antiqua","Microsoft Sans Serif","Monotype Corsiva","Tahoma",
+        "Verdana","Marlett","Latha","Haettenschweiler","Garamond","Courier New"};
+        for(int i = 0; i < Allfonts.length; i++)
+            lItems.addElement(Allfonts[i]);
+        //setting sizes     
+        String [] Allsizes={"6","8","10","12",
+        "14","16","18","20",
+        "22","24","26","28","30","32"};
+        for(int i = 0; i < Allsizes.length; i++)
+            SItems.addElement(Allsizes[i]);
+        //setting styles
+        String [] Allstyles={"Bold","Plain","Italic"};
+        for(int i = 0; i < Allstyles.length; i++)
+            TItems.addElement(Allstyles[i]);
+        // Register list events listeners,scrolling and bounds(doesn't work)
+        fontsList.addListSelectionListener(new ListFontL());
+        fontsList.setAutoscrolls(true);
+        fontsList.setBounds(5, 10,4,10);
+    
+        sizeList.addListSelectionListener(new ListSizeL());
+        sizeList.setAutoscrolls(true);
+        sizeList.setBounds(5, 10,4,10);
+    
+        styleList.addListSelectionListener(new ListStyleL());
+        //styleList.setAutoscrolls(true);
+        styleList.setSize(100,150);
+        //registering events for the colors menu items.
+        fontColor.addActionListener(new FormatFontColorL());
+        bgColor.addActionListener(new FormatBgColorL());
+
+       
+     
+    }//constructor
+    
+   
+   class admin implements ActionListener 
+   {
+       public void actionPerformed(ActionEvent ae)
+       {
+            final JFrame jfrm=new JFrame("Login");
+            jfrm.setLayout(new FlowLayout());
+            jfrm.setSize(400,190);
+            jfrm.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+            JLabel l=new JLabel("Enter the product key");
+            jfrm.add(l);
+        
+            final JPasswordField pass=new JPasswordField(15);
+            jfrm.add(pass);
+        
+            JButton bt=new JButton("Enter");
+            jfrm.add(bt);
+        
+            bt.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent ae)
+                {
+                    char[] input =pass.getPassword();
+                    String key="zxcv123gth";
+                    int i,k ;
+                    k=0;
+                    for(i=0;i<key.length();i++)
+                    {
+                        char b=key.charAt(i);
+                        {
+                            if(b==input[i])
+                            {
+                                k++;
+                            }
+                        }
+                    }   
+                    if(k==key.length())
+                    {
+                        JFrame f=new JFrame("ADMIN");
+                        f.setLayout(new FlowLayout());
+                        f.setSize(400,190);
+                        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    
+                        JButton a=new JButton("Edit the Word List");
+                        f.setVisible(true);
+                        
+                        JTextArea jtf7=new JTextArea();
+                        jtf7.setText("You have been entrusted with the sacred key to the TextPro! You might not realise the mighty powers that have just been handed , so consider this is your deliverance. We at textPro are proud of whatever we have acheieved and so take good care of it. Please be a good boy and use only goos english words yout mom taught you.All Hail Hitler   ");
+                        f.add(jtf7);  
+                        jtf7.setLineWrap(true);
+                        jtf7.setWrapStyleWord(true);
+                        jtf7.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+                        jtf7.setEditable(false);
+                        JScrollPane jp=new JScrollPane(jtf7);
+                        jfrm.add(jp);
+                        jp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+                        //f.setVisible(true);
+                        
+                        f.add(jp);
+                        f.add(a);
+                        //JButton b=new JButton("CLOSE");
+                        
+                    
+                        a.addActionListener(new ActionListener()
+                        {
+                            public void actionPerformed(ActionEvent ae)
+                            {
+                                File f1=new File("F://Downloads//src//main//resources//dict//Dictionary.txt");
+                                JFileChooser choose=new JFileChooser(f1);
+                                int s=choose.showOpenDialog(TypeAhead.this);
+                                if(s==choose.APPROVE_OPTION) 
+                                {
+                                        f1=choose.getSelectedFile();
+                                        //displaying in 'ta' text area the current directory of the file.
+                                        ta.setText(choose.getCurrentDirectory().toString());
+                                        //removing the '.txt' characters of the file to keep only the name.
+                                        int end=(f1.getName().length())-4;
+                                        //setting the title of the frame the name of the file.
+                                        setTitle(f1.getName().substring(0,end));
+                                        isSaved=false;
+                                        try 
+                                        {
+                                            //displaying the selected file in the editor
+                                            text.setPage(f1.toURL());
+                                        }
+                
+                                        catch(IOException exc) 
+                                        {
+                                            throw new RuntimeException();
+                                        }
+
+                                    }
+                                    //if cancel option was selected
+                                    else if (s==choose.CANCEL_OPTION) 
+                                    {
+                                        ta.setText("");//no file name or path is displayed.
+                                    }
+                                }
+                            });
+                        }
+                             else 
+                             JOptionPane.showMessageDialog(jfrm,"Incorrect Details","Name",JOptionPane.PLAIN_MESSAGE);
+                          }
+                        });
+            jfrm.setVisible(true);
+        }
+    }
+
+   class gethelp implements ActionListener
+   {
+       public void actionPerformed(ActionEvent ae)
+       {
+           if(Desktop.isDesktopSupported())
+           {
+               try
+               {
+                   File myfile= new File("D:\\editor\\TextPro\\text.docx");
+                   Desktop.getDesktop().open(myfile);
+               }
+                catch(IOException oe)
+                {}
+            }
+        }
+    }
+    
+    
+   class PredictText implements ActionListener
+   {
+       public void actionPerformed(ActionEvent e)
+       {
+        JFrame f = new JFrame("Predict");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        f.getContentPane().setLayout(new BorderLayout());
+
+        DocumentLookAhead lookAhead = new DocumentLookAhead();
+        JScrollPane scrollPane = new JScrollPane();
+        LookAheadTextPane tf = new LookAheadTextPane(lookAhead);
+        scrollPane.getViewport().add(tf);
+        scrollPane.getViewport().setPreferredSize(tf.getPreferredSize());
+
+        try 
+        {
+            f.getContentPane().add(scrollPane, java.awt.BorderLayout.CENTER);
+            f.pack();
+            f.setLocationRelativeTo(null);
+            f.setVisible(true);
+        } 
+        catch(RuntimeException ex) 
+        {
+            // do nothing
+        }
+       }
+    }
+    //the File>New listener
+    //This class imlements the ActionListener interface for handling action events for '_new' menuItem.
+    class FileNewL implements ActionListener
+    {
+      
+        public void actionPerformed(ActionEvent e) 
+        {                    
+            //setting the default name for a new document.
+            setTitle("Untitled");
+            //no file path
+            ta.setText("");
+            //no text in the editor
+            text.setText("");
+            isSaved=false;
+        }
+        
+    }//inner class FileNewL
+    
+    
+    //the File>Open listener
+    //This class imlements the ActionListener interface for handling action events for 'open' menuItem.
+    class FileOpenL implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
+        {
+            //the initial folder which the file chooser displays
+            File f=new File("E://");
+            //File ff=new File("F://Downloads//src//main//resources//dict//Dictionary.txt");
+            //the file chooser
+            JFileChooser choose=new JFileChooser(f);
+            JFrame swag=new JFrame("Warning");
+            swag.setLayout(new GridLayout(14,2));
+            swag.setSize(400,190);
+            swag.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+            
+            //setting the file filter for displaying only folders and text files. 
+            //choose.setFileFilter(new TextFilter());
+            //shows the Open dialog
+            int s=choose.showOpenDialog(TypeAhead.this);           
+            //if the file is opened
+            if(s==choose.APPROVE_OPTION) 
+            {
+                f=choose.getSelectedFile();
+                if(f.getName().equals("Dictionary.txt")==true)
+                {
+                    //ta.setEditable(false);
+                    JOptionPane.showMessageDialog(swag,"Cannot edit","Alert",JOptionPane.PLAIN_MESSAGE);
+                    System.exit(0);
+                    //swag.setVisible(true);
+                }
+                //displaying in 'ta' text area the current directory of the file.
+                ta.setText(choose.getCurrentDirectory().toString());
+                //removing the '.txt' characters of the file to keep only the name.
+                int end=(f.getName().length())-4;
+                //setting the title of the frame the name of the file.
+                setTitle(f.getName().substring(0,end));
+                isSaved=false;
+                try {
+                    //displaying the selected file in the editor
+                    text.setPage(f.toURL());
+                }
+                
+                catch(IOException exc) {
+                    throw new RuntimeException();
+                }
+
+            }
+            //if cancel option was selected
+            else if (s==choose.CANCEL_OPTION) {
+                ta.setText("");//no file name or path is displayed.
+            }
+        }//actionPerformed 
+    }//FileOpenL
+    
+    //the File>Save listener
+    //This class imlements the ActionListener interface for handling action events for 'save' menuItem.
+    class FileSaveL implements ActionListener 
+    {
+        
+        public void actionPerformed(ActionEvent e) 
+        {
+            BufferedWriter bw;
+            //the initial folder which the file chooser displays
+            File f=new File("E://");
+            JFileChooser choose=new JFileChooser(f);
+            //setting the file filter for displaying only folders and text files. 
+            //choose.setFileFilter(new TextFilter());
+            int s=choose.showSaveDialog(TypeAhead.this);//check again later
+            if(s==choose.APPROVE_OPTION)
+            {
+                try 
+                {
+                      //setting the file which will be written
+                      f=choose.getSelectedFile();
+                      bw=new BufferedWriter(new FileWriter((f.toString()+".txt"),true));
+                      //writing to that file
+                      text.write(bw);
+                      isSaved=true;
+                       setTitle(f.getName());
+                }//try
+              
+                catch (IOException exc) {
+                    ta.setText("Error occured while writing.");
+                }
+            }
+            else if (s==choose.CANCEL_OPTION) {
+                ta.setText("");
+            }
+        }//actionPerformed
+    }//FileSaveL
+    
+    /*
+     *This inner class handles window events.
+     *Extending the WindowAdapter class to override a method instead of implementing all
+     *that are required by the WindowListener interface.
+    */
+    class WindowL extends WindowAdapter {
+        //when the user goes to close the window
+        public void windowClosing(WindowEvent e) {
+            setDefaultCloseOperation(EXIT_ON_CLOSE);
+            //if the file has not been saved pop up a confirmation dialog.
+            if(!isSaved  )
+            {
+                int option=JOptionPane.showConfirmDialog(null,"Exit without save?","Notepad",
+                JOptionPane.YES_NO_OPTION,JOptionPane.INFORMATION_MESSAGE);
+                //if chose NO return to the editor
+                if(option==JOptionPane.NO_OPTION)
+                    setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+                else //exit from the program
+                    setDefaultCloseOperation(EXIT_ON_CLOSE);
+            }
+        }
+    }//WindowL
+    
+    
+    //The Edit>Cut listener
+    //the more code way
+    class EditCutL implements ActionListener 
+    {
+        public void actionPerformed(ActionEvent e) 
+        {
+            String selText=text.getSelectedText();
+            if(selText==null)
+                return;
+            StringSelection stringSel=new StringSelection(selText);
+            board.setContents(stringSel,stringSel);
+            text.replaceSelection("");
+        }
+        
+    }
+    
+    //The Edit>Copy listener
+        //the less code way
+        class EditCopyL implements ActionListener 
+        {
+            public void actionPerformed(ActionEvent e)
+            {
+                text.copy();
+            }
+        }
+        
+    //The Edit>Copy listener
+    //the less code way
+    class EditPasteL implements ActionListener
+    {
+          public void actionPerformed(ActionEvent e)
+          {
+               text.paste();
+          }
+    }
+    
+    //The Format>Font listener
+    class FormatFontL implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e)
+        {
+            Mydialog md=new Mydialog(null);
+            md.show();
+        }
+    }
+    //This class creates a dialog box where lists of menu item font  will be placed
+    class Mydialog extends JDialog 
+    {
+        public Mydialog(JFrame parent)
+        {            
+            super(parent, "Format", true);
+            Container cp = getContentPane();//contents that are displayed
+            //creating border for the lists
+            Border brd = BorderFactory.createMatteBorder(1, 1, 2, 2, Color.BLACK);
+            //adding the border to the lists
+            fontsList.setBorder(brd);
+            sizeList.setBorder(brd);
+            styleList.setBorder(brd);
+            //this way the user won't be able to resize the window
+            setResizable(false);
+            //labels for the lists
+            JPanel formatPanel=new JPanel();
+            JPanel formatDescPanel=new JPanel();
+            formatDescPanel.add(new JLabel("   Font                       "),BorderLayout.EAST);
+            formatDescPanel.add(new JLabel("          \t\t\t   Style    "),BorderLayout.CENTER);
+            formatDescPanel.add(new JLabel("Size"),BorderLayout.WEST);
+
+            formatPanel.add(fontsList,BorderLayout.EAST);
+            formatPanel.add(styleList,BorderLayout.NORTH);
+            formatPanel.add(sizeList,BorderLayout.WEST);
+
+            cp.add(formatDescPanel,BorderLayout.NORTH);
+            cp.add(formatPanel,BorderLayout.CENTER);
+            setSize(250,400);//size of the dialog box 
+            JButton ok=new JButton("OK");
+            //anonymous inner class
+            ok.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e)
+                {
+                    dispose(); // Closes the dialog
+                }
+            });//anomymous inner class
+            cp.add(ok,BorderLayout.SOUTH);
+        }//constructor
+    }//Mydialog
+    
+    //Listeners for the fonts list
+    class ListFontL implements ListSelectionListener
+    {
+        
+        public void valueChanged(ListSelectionEvent e)
+        {
+           fontOptions();
+        }
+    }
+
+    class ListSizeL implements ListSelectionListener
+    {
+        public void valueChanged(ListSelectionEvent e)
+        {
+           fontOptions();
+        }
+    }
+    
+    class ListStyleL implements ListSelectionListener
+    {
+        
+        public void valueChanged(ListSelectionEvent e)
+        {
+            fontOptions();
+        }
+    }
+    
+    //The dialog for the color list    
+    //The Format>Font listener
+    class FormatFontColorL implements ActionListener
+    {
+        public void actionPerformed(ActionEvent e) 
+        {
+            //Shows a modal color-chooser dialog and . If the user presses the "OK" button, 
+            //returns the selected color
+            JTextPane selected=new JTextPane();
+            Color c=JColorChooser.showDialog(null,"Font Color",Color.BLACK);
+            //setting the returned color as the font color
+            text.setForeground(c);
+        }
+    }
+    
+    //The Format>BgColor listener
+    class FormatBgColorL implements ActionListener 
+    {
+        public void actionPerformed(ActionEvent e) 
+        {
+            //same as above for the backround color
+            Color c=JColorChooser.showDialog(null,"Backround Color",Color.BLACK);
+            text.setBackground(c);
+        }
+    }
+    
+    /*
+     *Used in list listeners of menu item Font to avoid repeating code.
+     *Setting the font,size and style of the editor.
+     *@return Nothing.
+    */
+    public void fontOptions() {
+         int size=12;
+         String font="Times New Roman";
+         int style=currentFont.PLAIN;
+         //setting the current font of the editor according to the options the user 
+         //selected in the lists and if selected.
+         //checks for font
+         if(fontsList.getSelectedValue()!=null )
+            font =fontsList.getSelectedValue().toString();
+         //checks for font size
+         if(sizeList.getSelectedValue()!=null) 
+            size=Integer.parseInt(sizeList.getSelectedValue().toString());
+         //checking for style selection
+         if(styleList.getSelectedValue()!=null)
+         { 
+            if(styleList.getSelectedValue().toString().equals("Bold"))
+                style=currentFont.BOLD;
+            if(styleList.getSelectedValue().toString().equals("Plain"))
+                style=currentFont.PLAIN;
+            if(styleList.getSelectedValue().toString().equals("Italic"))
+                style=currentFont.ITALIC;
+         }
+         currentFont=new Font(font,style,size);   
+         text.setFont(currentFont);
+    }
+    
+  
+    
+    public static void main(String args[]) 
+    {
+         //creating instance of Notepad to initialize components
+        //and call non-static methods necessary to display the frame
+       TypeAhead n=new TypeAhead();
+        n.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        n.setSize(300,200);
+        n.setVisible(true);
+    }
+    
+}
+    
